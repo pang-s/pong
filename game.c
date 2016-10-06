@@ -11,6 +11,7 @@
 #include "pio.h"
 #include "pacer.h"
 #include "led.h"
+#include "ir_uart.h"
 
 
 #define LED_PIO PIO_DEFINE (PORT_C, 2)
@@ -66,6 +67,7 @@ static uint8_t bitmap[] =
 
 int prev_shot_row = 3;
 int new_shot_row = 2;
+bool received = false;
 static void board(__unused__ void *data) {
 
     display_column (bitmap[current_column], current_column);
@@ -76,6 +78,18 @@ static void board(__unused__ void *data) {
     {
         current_column = 0;
     }
+    
+    if (ball_shot && bitmap[0] !=  0) {
+		ir_uart_putc(bitmap[0]);
+		bitmap[0] = 0x00;
+	}
+	
+	if(ir_uart_read_ready_p()){
+		bitmap[0] = ir_uart_getc();
+		// received ball at col 0 so keep receiving ball
+		received = true;
+
+	}
 
 
 }
@@ -96,6 +110,8 @@ void display_column (uint8_t row_pattern, uint8_t current_column)
     }
     pio_output_low(cols[current_column]);
     prev_column = current_column;
+    
+    
 
 }
 
@@ -106,6 +122,10 @@ static void button_task_init (void)
 }
 
 
+
+int receive_go_to = 1;
+int receive_prev = 0;
+bool bounce = false;
 static void button_task (__unused__ void *data)
 {
     //button_update ();
@@ -140,12 +160,38 @@ static void button_task (__unused__ void *data)
         prev_shot_row--;
         new_shot_row--;
     }
+    
+    if(received){
+		bitmap[receive_go_to] = bitmap[receive_prev];
+        bitmap[receive_prev] = 0x00;
+        receive_prev++;
+        receive_go_to++;
+        if (receive_go_to == 3) {
+			int bounce_back = bitmap[4] | bitmap[3];
+			if (bounce_back % 7 == 0) {
+				bounce = true;
+				new_shot_row = 2;
+				prev_shot_row = 3;
+				receive_go_to = 1;
+				receive_prev = 0;
+			}
+		}
+	}
+	
+	if(bounce){
+		bitmap[new_shot_row] = bitmap[prev_shot_row];
+        bitmap[prev_shot_row] = 0x00;
+        prev_shot_row--;
+        new_shot_row--;
+	}
 }
+
 
 
 int main (void)
 {
     system_init ();
+    ir_uart_init();
     ini();
 
     task_t tasks[] =
