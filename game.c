@@ -19,7 +19,7 @@
 #define BUTTON_TASK_RATE 100
 
 
-static prev_column = 0;
+int prev_column = 0;
 uint8_t current_column = 0;
 bool ball_shot = false;
 bool start_shot = false;
@@ -60,7 +60,8 @@ static void ini(void) {
 
 static uint8_t bitmap[] =
 {
-    0x00, 0x00, 0x00, 0b0001000, 0b0011100
+	// 0x00, 0x00, 0x00, 0b0001000, 0b0011100
+    0x00, 0x00, 0x00, 0x00, 0b0011100
 };
 
 
@@ -68,6 +69,13 @@ static uint8_t bitmap[] =
 int prev_shot_row = 3;
 int new_shot_row = 2;
 bool received = false;
+
+int receive_go_to = 1;
+int receive_prev = 0;
+bool bounce = false;
+int start_with_ball = 0;
+int communicated = 0;
+
 static void board(__unused__ void *data) {
 
     display_column (bitmap[current_column], current_column);
@@ -84,11 +92,30 @@ static void board(__unused__ void *data) {
 		bitmap[0] = 0x00;
 	}
 	
+	// ready to receive 
 	if(ir_uart_read_ready_p()){
-		bitmap[0] = ir_uart_getc();
+		uint8_t rec_char = ir_uart_getc();
+		// if receive signal from opp, you get the ball
+		if(rec_char == 'S'){
+			communicated = 2; // made contact with opp
+			// give ball
+			bitmap[3] = 0b0001000;
+			// tell opp you got ball
+			ir_uart_putc('B');
+		}
+		
+		if(rec_char == 'B'){
+			// opponent has the ball
+			communicated = 3;
+		}
+		/*
+		else{
+			bitmap[0] = rec_char;
+		}
+		* */
 		// received ball at col 0 so keep receiving ball
-		received = true;
-
+		//received = true;
+		
 	}
 
 
@@ -123,61 +150,74 @@ static void button_task_init (void)
 
 
 
-int receive_go_to = 1;
-int receive_prev = 0;
-bool bounce = false;
+
 static void button_task (__unused__ void *data)
 {
-    //button_update ();
+    button_update ();
     navswitch_update ();
-
-    if (navswitch_push_event_p (NAVSWITCH_SOUTH) && bitmap[4] < 112)
-    {
-      bitmap[4] = bitmap[4]*2;
-      if(ball_shot == false){
-          bitmap[3] = bitmap[3]*2;
-      }
-    }
-
-    if (navswitch_push_event_p (NAVSWITCH_NORTH) && bitmap[4] > 7)
-    {
-      bitmap[4] = bitmap[4]/2;
-      if(ball_shot == false){
-          bitmap[3] = bitmap[3]/2;
-      }
-    }
-
-    if (ball_shot == false && navswitch_push_event_p (NAVSWITCH_PUSH))
-    {
-      start_shot = true;
-      ball_shot = true;
-
-    }
-
-    if(ball_shot && new_shot_row >= 0){
-        bitmap[new_shot_row] = bitmap[prev_shot_row];
-        bitmap[prev_shot_row] = 0x00;
-        prev_shot_row--;
-        new_shot_row--;
-    }
     
-    if(received){
-		bitmap[receive_go_to] = bitmap[receive_prev];
-        bitmap[receive_prev] = 0x00;
-        receive_prev++;
-        receive_go_to++;
-        if (receive_go_to == 3) {
-			int bounce_back = bitmap[4] | bitmap[3];
-			if (bounce_back % 7 == 0) {
-				bounce = true;
-				new_shot_row = 2;
-				prev_shot_row = 3;
-				receive_go_to = 1;
-				receive_prev = 0;
-			}
-		}
+    // if havent made contact with opp
+	if (communicated == 0)
+	{
+		// send signal to opp
+		ir_uart_putc('S');
+		communicated = 1; // communicated to opp
+		
 	}
 	
+	if (communicated == 2 || communicated == 3){
+			
+		if (navswitch_push_event_p (NAVSWITCH_SOUTH) && bitmap[4] < 112)
+		{
+		  bitmap[4] = bitmap[4]*2;
+		  if(ball_shot == false){
+			  bitmap[3] = bitmap[3]*2;
+		  }
+		}
+
+		if (navswitch_push_event_p (NAVSWITCH_NORTH) && bitmap[4] > 7)
+		{
+		  bitmap[4] = bitmap[4]/2;
+		  if(ball_shot == false){
+			  bitmap[3] = bitmap[3]/2;
+		  }
+		}
+
+		if (ball_shot == false && navswitch_push_event_p (NAVSWITCH_PUSH))
+		{
+		  start_shot = true;
+		  ball_shot = true;
+
+		}
+
+		if(ball_shot && new_shot_row >= 0){
+			bitmap[new_shot_row] = bitmap[prev_shot_row];
+			bitmap[prev_shot_row] = 0x00;
+			prev_shot_row--;
+			new_shot_row--;
+		}
+		
+		if(received){
+			bitmap[receive_go_to] = bitmap[receive_prev];
+			bitmap[receive_prev] = 0x00;
+			receive_prev++;
+			receive_go_to++;
+			
+			if (receive_go_to == 3) {
+				int bounce_back = bitmap[4] | bitmap[3];
+				if (bounce_back % 7 == 0) {
+					bounce = true;
+					new_shot_row = 2;
+					prev_shot_row = 3;
+					receive_go_to = 1;
+					receive_prev = 0;
+				}
+			}
+		
+	}
+		
+	}
+/*	
 	if(bounce){
 		bitmap[new_shot_row] = bitmap[prev_shot_row];
         bitmap[prev_shot_row] = 0x00;
@@ -187,7 +227,7 @@ static void button_task (__unused__ void *data)
 			bounce = false;
 		}
 	}
-
+*/
 }
 
 
