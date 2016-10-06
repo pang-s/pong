@@ -181,9 +181,13 @@ static void button_task (__unused__ void *data)
 	if(bounce){
 		bitmap[new_shot_row] = bitmap[prev_shot_row];
         bitmap[prev_shot_row] = 0x00;
-        prev_shot_row--;
+		prev_shot_row--;
         new_shot_row--;
+        if (prev_shot_row == 0) {
+			bounce = false;
+		}
 	}
+
 }
 
 
@@ -197,7 +201,7 @@ int main (void)
     task_t tasks[] =
     {
         {.func = board, .period = TASK_RATE / 2000},
-        {.func = button_task, .period = TASK_RATE / 20}
+        {.func = button_task, .period = TASK_RATE / 10}
     };
 
     button_task_init ();
