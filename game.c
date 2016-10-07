@@ -1,6 +1,6 @@
-/** @file   stopwatch1.c
-    @author M.P. Hayes
-    @date   22 Sep 2011
+/** @file   game.c
+    @author Pang Suwanaposee and Alex Lie
+    @date   7 Oct 2016
 */
 
 #include <avr/io.h>
@@ -64,6 +64,9 @@ static uint8_t bitmap[] =
     0x00, 0x00, 0x00, 0x00, 0b0011100
 };
 
+static unsigned char lookup[16] = {
+0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
+0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf, };
 
 
 int prev_shot_row = 3;
@@ -76,6 +79,22 @@ bool bounce = false;
 int start_with_ball = 0;
 int communicated = 0;
 
+
+/*
+uint8_t reverse(uint8_t x)
+{
+    x = ((x >> 1) & 0x55555555u) | ((x & 0x55555555u) << 1);
+    x = ((x >> 2) & 0x33333333u) | ((x & 0x33333333u) << 2);
+    x = ((x >> 4) & 0x0f0f0f0fu) | ((x & 0x0f0f0f0fu) << 4);
+    return x;
+}
+*/
+
+uint8_t reverse(uint8_t n) {
+  //int intSize = 8;
+	return (lookup[n&0b1111] << 3) | lookup[n>>3];
+}
+
 static void board(__unused__ void *data) {
 
     display_column (bitmap[current_column], current_column);
@@ -87,26 +106,37 @@ static void board(__unused__ void *data) {
         current_column = 0;
     }
     
+    // send ball to opponent once the ball is at the edge of the screen
     if (ball_shot && bitmap[0] !=  0) {
-		ir_uart_putc(bitmap[0]);
-		bitmap[0] = 0x00;
+		ir_uart_putc(bitmap[0]); // send ball
+		bitmap[0] = 0x00; // because ball has left your screen
 	}
 	
 	// ready to receive 
 	if(ir_uart_read_ready_p()){
-		uint8_t rec_char = ir_uart_getc();
-		// if receive signal from opp, you get the ball
-		if(rec_char == 'S'){
-			communicated = 2; // made contact with opp
-			// give ball
-			bitmap[3] = 0b0001000;
-			// tell opp you got ball
-			ir_uart_putc('B');
+		if(communicated == 1){
+			
+			uint8_t rec_char = ir_uart_getc();
+			// if receive signal from opp, you get the ball
+			if(rec_char == 'S'){
+				communicated = 2; // made contact with opp
+				// give ball
+				bitmap[3] = 0b0001000;
+				// tell opp you got ball
+				ir_uart_putc('B');
+			}
+			
+			if(rec_char == 'B'){
+				// opponent has the ball
+				communicated = 2;
+			}
+			
 		}
-		
-		if(rec_char == 'B'){
-			// opponent has the ball
-			communicated = 3;
+		else{
+			// should receive a ball
+			//bitmap[0] = ir_uart_getc();
+			bitmap[0] = reverse(ir_uart_getc());
+			//received = true;
 		}
 		/*
 		else{
@@ -120,6 +150,7 @@ static void board(__unused__ void *data) {
 
 
 }
+
 
 
 void display_column (uint8_t row_pattern, uint8_t current_column)
@@ -143,6 +174,8 @@ void display_column (uint8_t row_pattern, uint8_t current_column)
 }
 
 
+
+
 static void button_task_init (void)
 {
     button_init ();
@@ -161,35 +194,42 @@ static void button_task (__unused__ void *data)
 	{
 		// send signal to opp
 		ir_uart_putc('S');
-		communicated = 1; // communicated to opp
+		communicated = 1; // sent signal
 		
 	}
 	
-	if (communicated == 2 || communicated == 3){
-			
+	// has sent or received connection with opp
+	if (communicated == 2){
+		
+		
+		// go left
 		if (navswitch_push_event_p (NAVSWITCH_SOUTH) && bitmap[4] < 112)
 		{
-		  bitmap[4] = bitmap[4]*2;
+		  bitmap[4] = bitmap[4]*2; // move the bat to the left
+		  // if ball hasnt been shot yet, move the ball with the bat
 		  if(ball_shot == false){
 			  bitmap[3] = bitmap[3]*2;
 		  }
 		}
 
+		// go right
 		if (navswitch_push_event_p (NAVSWITCH_NORTH) && bitmap[4] > 7)
 		{
-		  bitmap[4] = bitmap[4]/2;
-		  if(ball_shot == false){
+		  bitmap[4] = bitmap[4]/2; // move the bat to the right
+		  // if ball hasnt been shot yet, move the ball with the bat
+		  if(ball_shot == false){ 
 			  bitmap[3] = bitmap[3]/2;
 		  }
 		}
 
+		// push button and ball hasn't been shot yet
 		if (ball_shot == false && navswitch_push_event_p (NAVSWITCH_PUSH))
 		{
 		  start_shot = true;
-		  ball_shot = true;
-
+		  ball_shot = true; // shoot ball
 		}
 
+		// if ball shot, show ball across screen if the ball is not at col 0
 		if(ball_shot && new_shot_row >= 0){
 			bitmap[new_shot_row] = bitmap[prev_shot_row];
 			bitmap[prev_shot_row] = 0x00;
@@ -197,12 +237,15 @@ static void button_task (__unused__ void *data)
 			new_shot_row--;
 		}
 		
-		if(received){
+		// received a ball so show ball fly into screen
+		if(received && receive_go_to <= 3){
+			
 			bitmap[receive_go_to] = bitmap[receive_prev];
 			bitmap[receive_prev] = 0x00;
 			receive_prev++;
 			receive_go_to++;
 			
+			/*
 			if (receive_go_to == 3) {
 				int bounce_back = bitmap[4] | bitmap[3];
 				if (bounce_back % 7 == 0) {
@@ -213,8 +256,9 @@ static void button_task (__unused__ void *data)
 					receive_prev = 0;
 				}
 			}
+			*/
 		
-	}
+		}
 		
 	}
 /*	
