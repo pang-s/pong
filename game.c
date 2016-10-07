@@ -151,6 +151,8 @@ static void board(__unused__ void *data) {
 		//uint8_t e = encrypt_ball(bitmap[0]);
 		//ir_uart_putc(e);
 		bitmap[0] = 0x00; // because ball has left your screen
+		ball_shot = false;
+		bounce = false;
 	}
 	
 	// ready to receive 
