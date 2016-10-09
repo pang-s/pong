@@ -22,6 +22,7 @@ int prev_column = 0;
 bool flyout = false;
 uint8_t current_column = 0;
 uint8_t flybit;
+uint8_t direction;
 bool ball_shot = false;
 /** Define PIO pins driving LED matrix rows.  */
 static const pio_t rows[] =
@@ -78,6 +79,7 @@ int prev_shot_row = 3;
 int new_shot_row = 2;
 bool received = false;
 bool reflect_right = false;
+bool reflect_left = false;
 
 int receive_go_to = 1;
 int receive_prev = 0;
@@ -87,7 +89,8 @@ bool bounce_right = false;
 int communicated = 0;
 bool opp_start = false;
 bool bounce = false;
-
+bool receiving_left = false;
+bool receiving_right = false;
 /*
 uint8_t reverse(uint8_t x)
 {
@@ -104,21 +107,28 @@ uint8_t reverse(uint8_t n) {
 }
 
 
-/*
+
 // encrypt ball bitmap into condensed form
-// eg. takes 1000000 and turns into 111
+// eg. takes 1000000 and turns into 110
 uint8_t encrypt_ball(uint8_t bits)
 {
-	return log(bits) / log(2) + 1;
+	return log(bits) / log(2);
 }
 
+
 // decrypt ball bitmap into true form
-// eg takes 111 turns into 1000000
+// eg takes 110 turns into 1000000
 uint8_t decrypt_ball(uint8_t bits)
 {
-	return pow(2,bits);
+	int num = bits;
+	int i;
+	int val = 1;
+	for (i = 0; i < bits; i++) {
+		val = val * 2;
+	}
+	return val;
 }
-* */
+
 
 
 
@@ -155,8 +165,13 @@ static void board(__unused__ void *data) {
     
     // send ball to opponent once the ball is at the edge of the screen
     if ((ball_shot && bitmap[0] !=  0) || (bounce && bitmap[0] != 0) ) {
-		ir_uart_putc(bitmap[0]); // send ball
-		//uint8_t e = encrypt_ball(bitmap[0]);
+		
+		// construct message then send
+		uint8_t ball_msg = encrypt_ball(bitmap[0]);
+		uint8_t message = direction + ball_msg;
+		
+		ir_uart_putc(message); // send message
+
 		//ir_uart_putc(e);
 		bitmap[0] = 0x00; // because ball has left your screen
 		ball_shot = false;
@@ -185,11 +200,25 @@ static void board(__unused__ void *data) {
 			
 		}
 		else{
-			// should receive a ball
-			//bitmap[0] = log(ir_uart_getc())/log(2);
-			bitmap[0] = reverse(ir_uart_getc());
-			// this shall convert the read bitmap
-			//bitmap[0] = log(reverse(ir_uart_getc()))/log(2) + 1;
+			// should receive a message
+			uint8_t rec_msg = ir_uart_getc();
+			// so decrypt ball, get last three bits
+			uint8_t rec_ball = rec_msg & 0b111;
+			// show ball on screen at col 0
+			bitmap[0] = reverse(decrypt_ball(rec_ball));
+			
+			// get direction of ball
+			uint8_t rec_direct = rec_msg & 0x18;
+			if(rec_direct == 10000){
+				// receive ball flying left
+				receiving_left = true;
+				
+			}
+			else if(rec_direct == 1000){
+				// receive ball flying right
+				receiving_right = true;
+				
+			}
 			received = true;
 		}
 		/*
@@ -237,8 +266,6 @@ static void button_task (__unused__ void *data)
 	
 	// has sent or received connection with opp
 	if (communicated == 2){
-		
-		
 		// go left
 		if (navswitch_push_event_p (NAVSWITCH_SOUTH) && bitmap[4] < 112)
 		{
@@ -302,6 +329,7 @@ static void button_task (__unused__ void *data)
 					bounce_left = true;
 					bounce = true;
 					reflect_right = false;
+					direction = 10000; // fly to the right
 				}
 				else if(2*(bat/7) == ball){
 					// hits middle go middle				
@@ -309,6 +337,7 @@ static void button_task (__unused__ void *data)
 					bounce_straight_to = 2;
 					bounce_straight = true;
 					bounce = true;
+					direction = 0;
 				}
 				else{
 					// hits left of bat so bounce to the right
@@ -316,6 +345,8 @@ static void button_task (__unused__ void *data)
 					bounce_right_to = 2;
 					bounce_right = true;
 					bounce = true;
+					reflect_left = false;
+					direction = 1000; // fly to the left
 				}
 
 			}
@@ -324,6 +355,8 @@ static void button_task (__unused__ void *data)
 			receive_go_to = 1;
 			receive_prev = 0;
 			received = false;
+			receiving_left = false;
+			receiving_right = false;
 		
 		}
 		
@@ -345,16 +378,41 @@ static void button_task (__unused__ void *data)
 			else{
 				bitmap[bounce_left_to] = bitmap[bounce_left_from]/2;
 				reflect_right = true;
+				direction = 10000; // fly to the right
 			}
 			bitmap[bounce_left_from] = 0x00;
 			bounce_left_from--;
 			bounce_left_to--;
 		}
 		
+
+		
+		// bounce to the right
+		if(bounce_right && bounce_right_to >= 0){
+			if(bitmap[bounce_right_from]  != 1 && reflect_left == false){
+				bitmap[bounce_right_to] = bitmap[bounce_right_from]/2;
+			}
+			else{
+				bitmap[bounce_right_to] = bitmap[bounce_right_from]*2;
+				reflect_left = true;
+				direction = 1000; // fly to the left
+			}
+			bitmap[bounce_right_from] = 0x00;
+			bounce_right_from--;
+			bounce_right_to--;
+		}
+		
 		// received a ball so show ball fly into screen
 		if(received && receive_go_to <= 3){
-			
-			bitmap[receive_go_to] = bitmap[receive_prev];
+			if(receiving_left){
+				bitmap[receive_go_to] = bitmap[receive_prev]*2;
+			}
+			else if(receiving_right){
+				bitmap[receive_go_to] = bitmap[receive_prev]/2;
+			}
+			else{
+				bitmap[receive_go_to] = bitmap[receive_prev];
+			}
 			bitmap[receive_prev] = 0x00;
 			receive_prev++;
 			receive_go_to++;
@@ -399,8 +457,8 @@ int main (void)
 
     task_t tasks[] =
     {
-        {.func = board, .period = TASK_RATE / 2000},
-        {.func = button_task, .period = TASK_RATE / 7}
+        {.func = board, .period = TASK_RATE / DISPLAY_TASK_RATE},
+        {.func = button_task, .period = TASK_RATE / 10}
     };
 
     button_task_init ();
