@@ -22,7 +22,7 @@ int prev_column = 0;
 bool flyout = false;
 uint8_t current_column = 0;
 uint8_t flybit;
-uint8_t direction;
+uint8_t direction = 0;
 bool ball_shot = false;
 /** Define PIO pins driving LED matrix rows.  */
 static const pio_t rows[] =
@@ -204,8 +204,7 @@ static void board(__unused__ void *data) {
 			uint8_t rec_msg = ir_uart_getc();
 			// so decrypt ball, get last three bits
 			uint8_t rec_ball = rec_msg & 0b111;
-			// show ball on screen at col 0
-			bitmap[0] = reverse(decrypt_ball(rec_ball));
+
 			
 			// get direction of ball
 			uint8_t rec_direct = rec_msg & 0x18;
@@ -217,8 +216,9 @@ static void board(__unused__ void *data) {
 			else if(rec_direct == 1000){
 				// receive ball flying right
 				receiving_right = true;
-				
 			}
+			// show ball on screen at col 0
+			bitmap[0] = reverse(decrypt_ball(rec_ball));
 			received = true;
 		}
 		/*
