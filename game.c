@@ -264,28 +264,7 @@ static void button_task (__unused__ void *data)
 			new_shot_row--;
 		}
 		
-		// received a ball so show ball fly into screen
-		if(received && receive_go_to <= 3){
-			
-			bitmap[receive_go_to] = bitmap[receive_prev];
-			bitmap[receive_prev] = 0x00;
-			receive_prev++;
-			receive_go_to++;
-			
-			/*
-			if (receive_go_to == 3) {
-				int bounce_back = bitmap[4] | bitmap[3];
-				if (bounce_back % 7 == 0) {
-					bounce = true;
-					new_shot_row = 2;
-					prev_shot_row = 3;
-					receive_go_to = 1;
-					receive_prev = 0;
-				}
-			}
-			*/
-		
-		}
+
 		
 		if(flyout){
 			bitmap[4] = flybit;
@@ -323,6 +302,28 @@ static void button_task (__unused__ void *data)
 			bounce_to--;
 		}
 		
+				// received a ball so show ball fly into screen
+		if(received && receive_go_to <= 3){
+			
+			bitmap[receive_go_to] = bitmap[receive_prev];
+			bitmap[receive_prev] = 0x00;
+			receive_prev++;
+			receive_go_to++;
+			
+			/*
+			if (receive_go_to == 3) {
+				int bounce_back = bitmap[4] | bitmap[3];
+				if (bounce_back % 7 == 0) {
+					bounce = true;
+					new_shot_row = 2;
+					prev_shot_row = 3;
+					receive_go_to = 1;
+					receive_prev = 0;
+				}
+			}
+			*/
+		
+		}
 	
 		
 	}
