@@ -68,17 +68,25 @@ static unsigned char lookup[16] = {
 0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf, };
 
-int bounce_to;
-int bounce_from;
+int bounce_straight_to;
+int bounce_straight_from;
+int bounce_left_to;
+int bounce_left_from;
+int bounce_right_to;
+int bounce_right_from;
 int prev_shot_row = 3;
 int new_shot_row = 2;
 bool received = false;
+bool reflect_right = false;
 
 int receive_go_to = 1;
 int receive_prev = 0;
-bool bounce = false;
+bool bounce_straight = false;
+bool bounce_left = false;
+bool bounce_right = false;
 int communicated = 0;
 bool opp_start = false;
+bool bounce = false;
 
 /*
 uint8_t reverse(uint8_t x)
@@ -214,6 +222,7 @@ static void button_task_init (void)
 
 static void button_task (__unused__ void *data)
 {
+
     button_update ();
     navswitch_update ();
     
@@ -283,9 +292,32 @@ static void button_task (__unused__ void *data)
 			}
 			else{
 				// get ball ready to bounce back
-				bounce_from = 3;
-				bounce_to = 2;
-				bounce = true;
+				// check where ball hits bat
+				uint8_t bat = bitmap[4];
+				uint8_t ball = bitmap[3];
+				if(bat /7 == ball){
+					// hits right of bat so bounce to the left
+					bounce_left_from = 3;
+					bounce_left_to = 2;
+					bounce_left = true;
+					bounce = true;
+					reflect_right = false;
+				}
+				else if(2*(bat/7) == ball){
+					// hits middle go middle				
+					bounce_straight_from = 3;
+					bounce_straight_to = 2;
+					bounce_straight = true;
+					bounce = true;
+				}
+				else{
+					// hits left of bat so bounce to the right
+					bounce_right_from = 3;
+					bounce_right_to = 2;
+					bounce_right = true;
+					bounce = true;
+				}
+
 			}
 			
 			//reset to receive later
@@ -295,14 +327,31 @@ static void button_task (__unused__ void *data)
 		
 		}
 		
-		if(bounce && bounce_to >= 0){
-			bitmap[bounce_to] = bitmap[bounce_from];
-			bitmap[bounce_from] = 0x00;
-			bounce_from--;
-			bounce_to--;
+		// bounce straight back
+		if(bounce_straight && bounce_straight_to >= 0){
+			bitmap[bounce_straight_to] = bitmap[bounce_straight_from];
+			bitmap[bounce_straight_from] = 0x00;
+			bounce_straight_from--;
+			bounce_straight_to--;
 		}
 		
-				// received a ball so show ball fly into screen
+		
+
+		// bounce to the left
+		if(bounce_left && bounce_left_to >= 0){
+			if(bitmap[bounce_left_from]  != 64 && reflect_right == false){
+				bitmap[bounce_left_to] = 2*bitmap[bounce_left_from];
+			}
+			else{
+				bitmap[bounce_left_to] = bitmap[bounce_left_from]/2;
+				reflect_right = true;
+			}
+			bitmap[bounce_left_from] = 0x00;
+			bounce_left_from--;
+			bounce_left_to--;
+		}
+		
+		// received a ball so show ball fly into screen
 		if(received && receive_go_to <= 3){
 			
 			bitmap[receive_go_to] = bitmap[receive_prev];
@@ -351,7 +400,7 @@ int main (void)
     task_t tasks[] =
     {
         {.func = board, .period = TASK_RATE / 2000},
-        {.func = button_task, .period = TASK_RATE / 10}
+        {.func = button_task, .period = TASK_RATE / 7}
     };
 
     button_task_init ();
