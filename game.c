@@ -49,7 +49,7 @@ bool receiving_right = false;
 uint8_t rec_ball;
 bool delete_col_0 = false;
 
-/** Define PIO pins driving LED matrix rows.  */
+/** Define PIO pins driving LED matrix rows. */
 static const pio_t rows[] = 
 {
     LEDMAT_ROW1_PIO, LEDMAT_ROW2_PIO, LEDMAT_ROW3_PIO,
@@ -58,14 +58,14 @@ static const pio_t rows[] =
 };
 
 
-/** Define PIO pins driving LED matrix columns.  */
+/** Define PIO pins driving LED matrix columns. */
 static const pio_t cols[] = 
 {
     LEDMAT_COL1_PIO, LEDMAT_COL2_PIO, LEDMAT_COL3_PIO,
     LEDMAT_COL4_PIO, LEDMAT_COL5_PIO
 };
 
-
+/** Initially set all PIO rows and cols to high. */
 static void ini(void)
 {
     pio_config_set(LEDMAT_ROW1_PIO, PIO_OUTPUT_HIGH);
@@ -84,38 +84,34 @@ static void ini(void)
 }
 
 
-
+/** Initially place bat at bottom middle of screen. */
 static uint8_t bitmap[] = 
 {
     0x00, 0x00, 0x00, 0x00, 0b0011100
 };
 
+/** Lookup table needed for reversing bits. */
 static unsigned char lookup[16] = 
 {
     0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
     0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf
 };
 
-
-
-
+/** Given bits n, return the reversed version of the bits. */
 uint8_t reverse(uint8_t n)
 {
     return (lookup[n & 0b1111] << 3) | lookup[n >> 3];
 }
 
-
-
-// encrypt ball bitmap into condensed form
-// eg. takes 1000000 and turns into 110
+/** Encrypt ball bitmap into condensed form 
+ * eg. takes 1000000 and turns into 110 */
 uint8_t encrypt_ball(uint8_t bits)
 {
     return log(bits) / log(2);
 }
 
-
-// decrypt ball bitmap into true form
-// eg takes 110 turns into 1000000
+/** Decrypt ball bitmap into true form
+ * eg takes 110 turns into 1000000 */
 uint8_t decrypt_ball(uint8_t bits)
 {
     int i;
@@ -127,14 +123,13 @@ uint8_t decrypt_ball(uint8_t bits)
     return val;
 }
 
-
-
-
+/** Given the row pattern and current column, display column. */
 void display_column(uint8_t row_pattern, uint8_t current_column)
 {
     int current_row = 0;
-    pio_output_high(cols[prev_column]);
+    pio_output_high(cols[prev_column]);    // set previous column high
 
+	// loop through until current_row is less than 7
     for (; current_row < 7; current_row++) 
     {
         if ((row_pattern >> current_row) & 1) 
@@ -145,43 +140,44 @@ void display_column(uint8_t row_pattern, uint8_t current_column)
             pio_output_high(rows[current_row]);
         }
     }
-    pio_output_low(cols[current_column]);
+    pio_output_low(cols[current_column]); // set current column low
     prev_column = current_column;
 }
 
+
+/** Construct a message then send a message with ball information. */
 void send_ball_msg(void)
 {
-	// construct message then send
 	uint8_t ball_msg = encrypt_ball(bitmap[0]);
 	uint8_t message = direction + ball_msg;
-
 	ir_uart_putc(message);  // send message
-	delete_col_0 = true;    // because ball has left your screen
+	delete_col_0 = true;    // because ball has left screen
 	ball_shot = false;
 	bounce = false;
 }
 
+/** Ready to receive a signal from opponent. */
 void receive_opp_signal(void)
 {
 	uint8_t rec_char = ir_uart_getc();
-	// if receive signal from opp, you get the ball
+	// if receive 'S' from opp, add ball to bat
 	if (rec_char == 'S') 
 	{
-		communicated = 2;       // made contact with opp
-		// give ball
-		bitmap[3] = 0b0001000;
-		// tell opp you got ball
-		ir_uart_putc('B');
+		communicated = 2;	// made contact with opp
+		bitmap[3] = 0b0001000;		// give ball
+		ir_uart_putc('B');		// tell opp you got ball
 	}
 
+	// if receive 'B' from opp, opponent has ball
 	if (rec_char == 'B') 
 	{
-		// opponent has the ball
+		// opponent will start with ball
 		opp_start = true;
 		communicated = 2;
 	}
 }
 
+/** Ready to receive a game message from opponent. */
 void receive_game_msg(void)
 {
 	// should receive a message
@@ -205,17 +201,22 @@ void receive_game_msg(void)
 		receiving_right = true;
 	}
 
+	// check that the receieved ball shows one dot
 	if (rec_ball >= 0 && rec_ball <= 6) 
 	{
+		// show received ball on screen
 		bitmap[0] = reverse(decrypt_ball(rec_ball));
 		received = true;
 	}
 }
 
+
+/** Board to be updated. */
 static void board(__unused__ void *data)
 {
     display_column(bitmap[current_column], current_column);
     current_column++;
+    // check if current column needs to loop back to 0
     if (current_column > (LEDMAT_COLS_NUM - 1)) 
     {
         current_column = 0;
@@ -240,38 +241,40 @@ static void board(__unused__ void *data)
 }
 
 
-
-
+/** Initialise button. */
 static void button_task_init(void)
 {
     button_init();
 }
 
 
+/** Check player controls. */
 void check_control(void)
 {
-	// go left
+	// Check if player wants to go left
 	if (navswitch_push_event_p(NAVSWITCH_SOUTH) && bitmap[4] < 112) 
 	{
 		bitmap[4] = bitmap[4] * 2;  // move the bat to the left
 		// if ball hasnt been shot yet, move the ball with the bat
 		if (ball_shot == false) 
 		{
-			bitmap[3] = bitmap[3] * 2;
+			bitmap[3] = bitmap[3] * 2; // move ball with bat.
 		}
 	}
-	// go right
+	
+	// Check if player wants to go right
 	if (navswitch_push_event_p(NAVSWITCH_NORTH) && bitmap[4] > 7) 
 	{
 		bitmap[4] = bitmap[4] / 2;  // move the bat to the right
 		// if ball hasnt been shot yet, move the ball with the bat
 		if (ball_shot == false) 
 		{
-			bitmap[3] = bitmap[3] / 2;
+			bitmap[3] = bitmap[3] / 2; // move ball with bat.
 		}
 	}
 	
-	// push button and ball hasn't been shot yet and opp hasnt got ball at start
+	// Check button has been pushed and ball hasn't been shot yet 
+	// and opponent do not have ball initially.
 	if (opp_start == false && ball_shot == false
 		&& navswitch_push_event_p(NAVSWITCH_PUSH)) 
 	{
@@ -279,9 +282,10 @@ void check_control(void)
 	}
 }
 
+/** If ball shot, show ball path across screen. */
 void ball_shot_path(void)
 {
-	// if ball shot, show ball across screen til col 0
+	// check if ball shot and ball is not at column less than 0
 	if (ball_shot && new_shot_row >= 0) 
 	{
 		bitmap[new_shot_row] = bitmap[prev_shot_row];
@@ -298,6 +302,7 @@ void ball_shot_path(void)
 	}
 }
 
+/** Check if ball needs to be shown flying out of screen. */
 void check_flyout(void)
 {
 	if (flyout) // if activated, show ball flying out of screen
@@ -308,7 +313,7 @@ void check_flyout(void)
 	}
 }
 
-
+/** Bounce ball to the left. */
 void ball_bounce_left(void)
 {
 	// hits right of bat so bounce to the left
@@ -320,6 +325,7 @@ void ball_bounce_left(void)
 	direction = 0b10000;       // fly to the right
 }
 
+/** Bounce ball to the middle. */
 void ball_bounce_middle(void)
 {
 	// hits middle go middle                                
@@ -330,6 +336,7 @@ void ball_bounce_middle(void)
 	direction = 0;
 }
 
+/** Bounce ball to the right. */
 void ball_bounce_right(void)
 {
 	// hits left of bat so bounce to the right
@@ -341,6 +348,7 @@ void ball_bounce_right(void)
 	direction = 0b1000;        // fly to the left
 }
 
+/** Check actions after receiving ball. */
 void receive_ball(void)
 {
 	// check for clashing/hitting bat
@@ -371,9 +379,9 @@ void receive_ball(void)
 	}
 }
 
+/** Reset variables so board can receive balls later. */
 void reset_receiver(void)
 {
-	//reset to receive later
 	receive_go_to = 1;
 	receive_prev = 0;
 	received = false;
@@ -381,51 +389,66 @@ void reset_receiver(void)
 	receiving_right = false;	
 }
 
+/** Bounce ball straight back. */
 void bounce_straight_back(void)
 {
+	// update ball to show in next column
 	bitmap[bounce_straight_to] = bitmap[bounce_straight_from];
-	bitmap[bounce_straight_from] = 0x00;
+	bitmap[bounce_straight_from] = 0x00; // clear ball from prev col
 	bounce_straight_from--;
 	bounce_straight_to--;
 }
 
+/** Bounce ball back to the left. */
 void bounce_back_left(void)
 {
+	// check if ball is reflected 
 	if (bitmap[bounce_left_from] != 64 && reflect_right == false) 
 	{
+		// update ball to show in next column
 		bitmap[bounce_left_to] = 2 * bitmap[bounce_left_from];
-	} else 
+	} 
+	else 
 	{
+		// ball reflected, update ball to show in next column
 		bitmap[bounce_left_to] = bitmap[bounce_left_from] / 2;
 		reflect_right = true;
 		direction = 0b10000;   // fly to the right
 	}
-	bitmap[bounce_left_from] = 0x00;
+	bitmap[bounce_left_from] = 0x00; // clear ball from prev col
 	bounce_left_from--;
 	bounce_left_to--;
 }
 
+/** Bounce ball back to the right. */
 void bounce_back_right(void)
 {
+	// check if ball is reflected 
 	if (bitmap[bounce_right_from] != 1 && reflect_left == false) 
 	{
+		// update ball to show in next column
 		bitmap[bounce_right_to] = bitmap[bounce_right_from] / 2;
-	} else 
+	} 
+	else 
 	{
+		// ball reflected, update ball to show in next column
 		bitmap[bounce_right_to] = bitmap[bounce_right_from] * 2;
 		reflect_left = true;
 		direction = 0b1000;    // fly to the left
 	}
-	bitmap[bounce_right_from] = 0x00;
+	bitmap[bounce_right_from] = 0x00; // clear ball from prev col
 	bounce_right_from--;
 	bounce_right_to--;
 }
 
+/** Display the received ball in the correct direction. */
 void check_receiving_direction(void)
 {
 	// received a ball so show ball fly into screen
 	if (received && receive_go_to <= 3) 
 	{
+		// check if ball should travel to the left, right or middle
+		// then update the bitmap corresponding to the direction
 		if (receiving_left) 
 		{
 			bitmap[receive_go_to] = bitmap[receive_prev] * 2;
@@ -442,11 +465,9 @@ void check_receiving_direction(void)
 	}
 }
 
-void check_conditions(void)
+/** Check if ball has been received and undergo actions to ball. */
+void check_received_ball(void)
 {
-	check_control();
-	ball_shot_path();
-	check_flyout();
 	// received ball and check if ball hits the bat
 	if (received && receive_go_to == 4) 
 	{
@@ -471,8 +492,19 @@ void check_conditions(void)
 	{
 		bounce_back_right();
 	}
-	check_receiving_direction();
 }
+
+/** Connected with opponent so check conditions and actions to do. */
+void check_conditions(void)
+{
+	check_control(); // check controls from user
+	ball_shot_path(); // check if need to show ball shot path
+	check_flyout(); // check if need to show ball fly off screen
+	check_received_ball(); // check if ball is received
+	check_receiving_direction(); // check direction of received ball
+}
+
+/** Tasks related to button is updated. */
 static void button_task(__unused__ void *data)
 {
     button_update();
@@ -494,13 +526,12 @@ static void button_task(__unused__ void *data)
 
 }
 
-
-
+/** Main function of program. */
 int main(void)
 {
     system_init();
     ir_uart_init();
-    ini();
+    ini(); // initialise PIO pins
 
     task_t tasks[] = 
     {
