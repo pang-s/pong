@@ -91,6 +91,8 @@ bool opp_start = false;
 bool bounce = false;
 bool receiving_left = false;
 bool receiving_right = false;
+uint8_t rec_ball;
+bool delete_col_0 = false;
 /*
 uint8_t reverse(uint8_t x)
 {
@@ -173,7 +175,8 @@ static void board(__unused__ void *data) {
 		ir_uart_putc(message); // send message
 
 		//ir_uart_putc(e);
-		bitmap[0] = 0x00; // because ball has left your screen
+		delete_col_0 = true; // because ball has left your screen
+		//bitmap[0] = 0x00; // because ball has left your screen
 		ball_shot = false;
 		bounce = false;
 	}
@@ -203,23 +206,32 @@ static void board(__unused__ void *data) {
 			// should receive a message
 			uint8_t rec_msg = ir_uart_getc();
 			// so decrypt ball, get last three bits
-			uint8_t rec_ball = rec_msg & 0b111;
+			rec_ball = rec_msg & 0b111;
 
 			
 			// get direction of ball
 			uint8_t rec_direct = rec_msg & 0x18;
-			if(rec_direct == 10000){
+			//rec_direct = reverse(rec_direct);
+			//uint8_t rec_direct = 0b10000;
+			if(rec_direct == 0b10000){
 				// receive ball flying left
+				received = true;
 				receiving_left = true;
 				
 			}
-			else if(rec_direct == 1000){
+			else if(rec_direct == 0b1000){
 				// receive ball flying right
+				received = true;
 				receiving_right = true;
 			}
+			
+			if(rec_ball >= 0 && rec_ball <= 6){
+				bitmap[0] = reverse(decrypt_ball(rec_ball));
+				received = true;
+			}
 			// show ball on screen at col 0
-			bitmap[0] = reverse(decrypt_ball(rec_ball));
-			received = true;
+			//bitmap[0] = reverse(decrypt_ball(rec_ball));
+			//received = true;
 		}
 		/*
 		else{
@@ -301,7 +313,10 @@ static void button_task (__unused__ void *data)
 		}
 		
 
-		
+		if(delete_col_0){
+			bitmap[0] = 0x00;
+			delete_col_0 = false;
+		}
 		if(flyout){
 			bitmap[4] = flybit;
 			flyout = false;
@@ -329,7 +344,7 @@ static void button_task (__unused__ void *data)
 					bounce_left = true;
 					bounce = true;
 					reflect_right = false;
-					direction = 10000; // fly to the right
+					direction = 0b10000; // fly to the right
 				}
 				else if(2*(bat/7) == ball){
 					// hits middle go middle				
@@ -346,7 +361,7 @@ static void button_task (__unused__ void *data)
 					bounce_right = true;
 					bounce = true;
 					reflect_left = false;
-					direction = 1000; // fly to the left
+					direction = 0b1000; // fly to the left
 				}
 
 			}
@@ -378,7 +393,7 @@ static void button_task (__unused__ void *data)
 			else{
 				bitmap[bounce_left_to] = bitmap[bounce_left_from]/2;
 				reflect_right = true;
-				direction = 10000; // fly to the right
+				direction = 0b10000; // fly to the right
 			}
 			bitmap[bounce_left_from] = 0x00;
 			bounce_left_from--;
@@ -395,7 +410,7 @@ static void button_task (__unused__ void *data)
 			else{
 				bitmap[bounce_right_to] = bitmap[bounce_right_from]*2;
 				reflect_left = true;
-				direction = 1000; // fly to the left
+				direction = 0b1000; // fly to the left
 			}
 			bitmap[bounce_right_from] = 0x00;
 			bounce_right_from--;
