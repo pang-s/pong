@@ -12,58 +12,82 @@
 #include "pacer.h"
 #include "led.h"
 #include "ir_uart.h"
+#include "var.h"
+#include "message.h"
 
 
 #define LED_PIO PIO_DEFINE (PORT_C, 2)
 #define DISPLAY_TASK_RATE 250
-#define BUTTON_TASK_RATE 100
-
-int prev_column = 0;
-bool flyout = false;
-uint8_t current_column = 0;
-uint8_t flybit;
-uint8_t direction = 0;
-bool ball_shot = false;
-int bounce_straight_to;
-int bounce_straight_from;
-int bounce_left_to;
-int bounce_left_from;
-int bounce_right_to;
-int bounce_right_from;
-int prev_shot_row = 3;
-int new_shot_row = 2;
-bool received = false;
-bool reflect_right = false;
-bool reflect_left = false;
-
-int receive_go_to = 1;
-int receive_prev = 0;
-bool bounce_straight = false;
-bool bounce_left = false;
-bool bounce_right = false;
-int communicated = 0;
-bool opp_start = false;
-bool bounce = false;
-bool receiving_left = false;
-bool receiving_right = false;
-uint8_t rec_ball;
-bool delete_col_0 = false;
-
-/** Define PIO pins driving LED matrix rows. */
-static const pio_t rows[] = 
-{
-    LEDMAT_ROW1_PIO, LEDMAT_ROW2_PIO, LEDMAT_ROW3_PIO,
-    LEDMAT_ROW4_PIO, LEDMAT_ROW5_PIO, LEDMAT_ROW6_PIO,
-    LEDMAT_ROW7_PIO
-};
+#define BUTTON_TASK_RATE 7
 
 
-/** Define PIO pins driving LED matrix columns. */
-static const pio_t cols[] = 
-{
-    LEDMAT_COL1_PIO, LEDMAT_COL2_PIO, LEDMAT_COL3_PIO,
-    LEDMAT_COL4_PIO, LEDMAT_COL5_PIO
-};
+//~ // used in board
+//~ uint8_t current_column = 0;
+//~ uint8_t rec_ball;
+
+
+//~ // used in button
+//~ int prev_shot_row = 3;
+//~ int new_shot_row = 2;
+//~ uint8_t flybit;
+//~ bool flyout = false;
+//~ int bounce_straight_to;
+//~ int bounce_straight_from;
+//~ int bounce_left_to;
+//~ int bounce_left_from;
+//~ int bounce_right_to;
+//~ int bounce_right_from;
+//~ int receive_go_to = 1;
+//~ int receive_prev = 0;
+//~ bool reflect_right = false;
+//~ bool reflect_left = false;
+//~ bool bounce_straight = false;
+//~ bool bounce_left = false;
+//~ bool bounce_right = false;
+//~ bool receiving_left = false;
+//~ bool receiving_right = false;
+
+
+//~ // used in both
+//~ int prev_column = 0;
+//~ uint8_t direction = 0;
+//~ bool ball_shot = false;
+//~ bool received = false;
+//~ int communicated = 0;
+//~ bool opp_start = false;
+//~ bool bounce = false;
+//~ bool delete_col_0 = false;
+
+//~ /** Define PIO pins driving LED matrix rows. */
+//~ static const pio_t rows[] = 
+//~ {
+    //~ LEDMAT_ROW1_PIO, LEDMAT_ROW2_PIO, LEDMAT_ROW3_PIO,
+    //~ LEDMAT_ROW4_PIO, LEDMAT_ROW5_PIO, LEDMAT_ROW6_PIO,
+    //~ LEDMAT_ROW7_PIO
+//~ };
+
+
+//~ /** Define PIO pins driving LED matrix columns. */
+//~ static const pio_t cols[] = 
+//~ {
+    //~ LEDMAT_COL1_PIO, LEDMAT_COL2_PIO, LEDMAT_COL3_PIO,
+    //~ LEDMAT_COL4_PIO, LEDMAT_COL5_PIO
+//~ };
+
+
+
+//~ /** Initially place bat at bottom middle of screen. */
+//~ uint8_t bitmap[] = 
+//~ {
+    //~ 0x00, 0x00, 0x00, 0x00, 0b0011100
+//~ };
+
+//~ /** Lookup table needed for reversing bits. */
+//~ static unsigned char lookup[16] = 
+//~ {
+    //~ 0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
+    //~ 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf
+//~ };
 
 /** Initially set all PIO rows and cols to high. */
 static void ini(void)
@@ -82,20 +106,6 @@ static void ini(void)
     pio_config_set(LEDMAT_COL4_PIO, PIO_OUTPUT_HIGH);
     pio_config_set(LEDMAT_COL5_PIO, PIO_OUTPUT_HIGH);
 }
-
-
-/** Initially place bat at bottom middle of screen. */
-static uint8_t bitmap[] = 
-{
-    0x00, 0x00, 0x00, 0x00, 0b0011100
-};
-
-/** Lookup table needed for reversing bits. */
-static unsigned char lookup[16] = 
-{
-    0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
-    0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf
-};
 
 /** Given bits n, return the reversed version of the bits. */
 uint8_t reverse(uint8_t n)
@@ -146,15 +156,15 @@ void display_column(uint8_t row_pattern, uint8_t current_column)
 
 
 /** Construct a message then send a message with ball information. */
-void send_ball_msg(void)
-{
-	uint8_t ball_msg = encrypt_ball(bitmap[0]);
-	uint8_t message = direction + ball_msg;
-	ir_uart_putc(message);  // send message
-	delete_col_0 = true;    // because ball has left screen
-	ball_shot = false;
-	bounce = false;
-}
+//~ void send_ball_msg(void)
+//~ {
+	//~ uint8_t ball_msg = encrypt_ball(bitmap[0]);
+	//~ uint8_t message = direction + ball_msg;
+	//~ ir_uart_putc(message);  // send message
+	//~ delete_col_0 = true;    // because ball has left screen
+	//~ ball_shot = false;
+	//~ bounce = false;
+//~ }
 
 /** Ready to receive a signal from opponent. */
 void receive_opp_signal(void)
@@ -163,7 +173,7 @@ void receive_opp_signal(void)
 	// if receive 'S' from opp, add ball to bat
 	if (rec_char == 'S') 
 	{
-		communicated = 2;	// made contact with opp
+		communicated = GOT_SIGNAL;	// made contact with opp
 		bitmap[3] = 0b0001000;		// give ball
 		ir_uart_putc('B');		// tell opp you got ball
 	}
@@ -173,7 +183,7 @@ void receive_opp_signal(void)
 	{
 		// opponent will start with ball
 		opp_start = true;
-		communicated = 2;
+		communicated = GOT_SIGNAL;
 	}
 }
 
@@ -229,7 +239,7 @@ static void board(__unused__ void *data)
     // ready to receive 
     if (ir_uart_read_ready_p()) 
     {
-        if (communicated == 1) 
+        if (communicated == SENT_SIGNAL) 
         {
 			receive_opp_signal();
         } 
@@ -504,6 +514,14 @@ void check_conditions(void)
 	check_receiving_direction(); // check direction of received ball
 }
 
+
+//~ /** Send signal to opponent. */
+//~ void send_signal(void)
+//~ {
+	//~ ir_uart_putc('S'); // send signal
+	//~ communicated = SENT_SIGNAL;       // sent signal
+//~ }
+
 /** Tasks related to button is updated. */
 static void button_task(__unused__ void *data)
 {
@@ -511,15 +529,12 @@ static void button_task(__unused__ void *data)
     navswitch_update();
 
     // if havent made contact with opp
-    if (communicated == 0) 
+    if (communicated == NO_CONTACT) 
     {
-        // send signal to opp
-        ir_uart_putc('S');
-        communicated = 1;       // sent signal
-
+		send_signal(); // send signal to opp
     }
     // has sent or received connection with opp
-    if (communicated == 2) 
+    if (communicated == GOT_SIGNAL) 
     {
 		check_conditions();
     }
@@ -536,7 +551,7 @@ int main(void)
     task_t tasks[] = 
     {
         {.func = board,.period = TASK_RATE / DISPLAY_TASK_RATE},
-        {.func = button_task,.period = TASK_RATE / 10}
+        {.func = button_task,.period = TASK_RATE / BUTTON_TASK_RATE}
     };
 
     button_task_init();

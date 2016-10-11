@@ -56,7 +56,7 @@ lab3-ex1.out: lab3-ex1.o pio.o system.o timer.o button.o display.o ledmat.o font
 
 # Target: clean project.
 .PHONY: clean
-clean: 
+clean:
 	-$(DEL) *.o *.out *.hex
 
 
@@ -65,5 +65,3 @@ clean:
 program: lab3-ex1.out
 	$(OBJCOPY) -O ihex lab3-ex1.out lab3-ex1.hex
 	dfu-programmer atmega32u2 erase; dfu-programmer atmega32u2 flash lab3-ex1.hex; dfu-programmer atmega32u2 start
-
-
