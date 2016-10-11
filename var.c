@@ -53,6 +53,10 @@ bool bounce = false;
 bool delete_col_0 = false;
 bool start_shot = false;
 
+bool lose = false;
+bool win = false;
+bool game_on = true;
+
 /** Define PIO pins driving LED matrix rows. */
 const pio_t rows[] = 
 {

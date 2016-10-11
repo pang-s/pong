@@ -8,6 +8,7 @@
 #include "ir_uart.h"
 #include "message.h"
 #include "var.h"
+#include "tinygl.h"
 
 /** Construct a message then send a message with ball information. */
 void send_ball_msg(void)
@@ -17,7 +18,6 @@ void send_ball_msg(void)
 	uint8_t message = direction + ball_msg;
 	ir_uart_putc(message);		// send message
 	delete_col_0 = true;		// because ball has left screen
-	//ball_shot = false;
 	bounce = false;
 }
 
@@ -25,7 +25,13 @@ void send_ball_msg(void)
 void send_signal(void)
 {
 	ir_uart_putc('S');				// send signal
-	communicated = SENT_SIGNAL;		// sent signal
+	communicated = SENT_SIGNAL;		
+}
+
+/** Tell opponent they won */
+void give_medal(void)
+{
+	ir_uart_putc('W');
 }
 
 /** Ready to receive a signal from opponent. */
@@ -54,29 +60,74 @@ void receive_game_msg(void)
 {
 	// should receive a message
 	uint8_t rec_msg = ir_uart_getc();
-	rec_ball = rec_msg & 0b111;	// decrypt ball, get last three bits
-	uint8_t rec_direct = rec_msg & 0x18;	// get direction of ball
 	
-	if (rec_direct == FLY_RIGHT) 
+	// check if winning message is received first
+	if(rec_msg == 'W' && game_on)
 	{
-		// receive ball flying left
-		received = true;
-		receiving_left = true;
+		win = true;
+		game_on = false;
+	}
+	else
+	{
+		rec_ball = rec_msg & 0b111;	// decrypt ball, get last three bits
+		uint8_t rec_direct = rec_msg & 0x18;	// get direction of ball
+		
+		if (rec_direct == FLY_RIGHT) 
+		{
+			// receive ball flying left
+			received = true;
+			receiving_left = true;
 
-	} 
-	else if (rec_direct == FLY_LEFT) 
-	{
-		// receive ball flying right
-		received = true;
-		receiving_right = true;
+		} 
+		else if (rec_direct == FLY_LEFT) 
+		{
+			// receive ball flying right
+			received = true;
+			receiving_right = true;
+		}
+
+		// check that the receieved ball shows one dot
+		if (rec_ball >= 0 && rec_ball <= 6) 
+		{
+			// show received ball on screen
+			bitmap[0] = reverse(decrypt_ball(rec_ball));
+			received = true;
+		}
 	}
 
-	// check that the receieved ball shows one dot
-	if (rec_ball >= 0 && rec_ball <= 6) 
+}
+
+/** Ready to send messages to opponent. */
+void ready_to_send(void)
+{
+	// check if ball is at the edge of the screen
+	if ((start_shot && bitmap[0] != 0)) 
 	{
-		// show received ball on screen
-		bitmap[0] = reverse(decrypt_ball(rec_ball));
-		received = true;
+		send_ball_msg();
+		start_shot = false; // because ball shoots once in a game
+	}
+	else if((bounce && bitmap[0] != 0))
+	{
+		send_ball_msg();
+	}
+	
+}
+
+/** Ready to receive messages from opponent. */
+void ready_to_receive(void)
+{
+	// check if there is something to receive
+	if (ir_uart_read_ready_p()) 
+	{
+		if (communicated == SENT_SIGNAL) 
+		{
+			receive_opp_signal();
+		} 
+		else 
+		{
+			receive_game_msg();
+		}
 	}
 }
+
 

@@ -9,6 +9,7 @@
 #include "var.h"
 #include "joystick.h"
 
+
 /** Check player controls. */
 void check_control(void)
 {

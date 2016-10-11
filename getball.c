@@ -1,14 +1,15 @@
 /** @file   getball.c
     @author Pang Suwanaposee and Alex Lie
     @date   7 Oct 2016
-    @brief Function to receive the ball onto the bat or fly out.
+    @brief Function to receive the ball to fly out of screen or not.
 */
 
 
 #include "pio.h"
 #include "var.h"
 #include "getball.h"
-
+#include "tinygl.h"
+#include "message.h"
 
 /** Check if ball needs to be shown flying out of screen. */
 void check_flyout(void)
@@ -18,6 +19,9 @@ void check_flyout(void)
 		// make ball fly out of screen
 		bitmap[4] = flybit;
 		flyout = false;
+		lose = true;
+		tinygl_text ("YOU LOST :(");
+		give_medal();
 	}
 }
 

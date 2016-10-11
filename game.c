@@ -19,6 +19,15 @@
 #include "getball.h"
 #include "hitball.h"
 
+#include "tinygl.h"
+#include "../fonts/font3x5_1.h"
+
+/* Define polling rate in Hz.  */
+#define LOOP_RATE 300
+
+/* Define text update rate (characters per 10 s).  */
+#define MESSAGE_RATE 10
+
 
 #define LED_PIO PIO_DEFINE (PORT_C, 2)
 #define DISPLAY_TASK_RATE 250
@@ -64,40 +73,34 @@ void display_column(uint8_t row_pattern, uint8_t current_column)
     prev_column = current_column;
 }
 
+/** Display bitmap on the board. */
+void display_board(void)
+{
+	display_column(bitmap[current_column], current_column);
+	current_column++;
+	// check if current column needs to loop back to 0
+	if (current_column > (LEDMAT_COLS_NUM - 1)) 
+	{
+		current_column = 0;
+	}	
+}
 
 /** Board to be updated. */
 static void board(__unused__ void *data)
 {
-    display_column(bitmap[current_column], current_column);
-    current_column++;
-    // check if current column needs to loop back to 0
-    if (current_column > (LEDMAT_COLS_NUM - 1)) 
-    {
-        current_column = 0;
-    }
-    // send ball to opponent once the ball is at the edge of the screen
-    if ((start_shot && bitmap[0] != 0)) 
-    {
-		send_ball_msg();
-		//ball_shot = true;
-		start_shot = false; // because ball shoots once in a game
-    }
-    else if((bounce && bitmap[0] != 0))
-    {
-		send_ball_msg();
+	if(lose || win)
+	{
+		// display text on screen
+		tinygl_update ();
+		tinygl_text_mode_set (TINYGL_TEXT_MODE_SCROLL);
 	}
-    // ready to receive 
-    if (ir_uart_read_ready_p()) 
-    {
-        if (communicated == SENT_SIGNAL) 
-        {
-			receive_opp_signal();
-        } 
-        else 
-        {
-			receive_game_msg();
-        }
-    }
+	else
+	{
+		display_board();
+		ready_to_send();
+		ready_to_receive();
+	}
+
 }
 
 /** Check game conditions. */
@@ -130,12 +133,24 @@ static void button_task(__unused__ void *data)
 
 }
 
+/** Tinygl initilisation. */
+void tiny_init(void)
+{
+	tinygl_init (LOOP_RATE);
+    tinygl_font_set (&font3x5_1);
+    tinygl_text_speed_set (MESSAGE_RATE);
+    tinygl_text_mode_set (TINYGL_TEXT_MODE_SCROLL);
+    tinygl_text_dir_set (TINYGL_TEXT_DIR_ROTATE);
+    tinygl_text ("YOU WON :)");
+}
+
 /** Main function of program. */
 int main(void)
 {
     system_init();
     ir_uart_init();
     pio_init();
+    tiny_init();
 
     task_t tasks[] = 
     {

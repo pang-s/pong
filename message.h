@@ -23,4 +23,10 @@ void receive_opp_signal(void);
 /** Ready to receive a game message from opponent. */
 void receive_game_msg(void);
 
+/** Ready to send messages to opponent. */
+void ready_to_send(void);
+
+/** Ready to receive messages from opponent. */
+void ready_to_receive(void);
+
 #endif
