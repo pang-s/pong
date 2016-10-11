@@ -1,6 +1,7 @@
 /** @file   var.c
     @author Pang Suwanaposee and Alex Lie
     @date   7 Oct 2016
+    @brief Store variables commonly used in the game.
 */
 
 
@@ -50,6 +51,7 @@ int communicated = 0;
 bool opp_start = false;
 bool bounce = false;
 bool delete_col_0 = false;
+bool start_shot = false;
 
 /** Define PIO pins driving LED matrix rows. */
 const pio_t rows[] = 

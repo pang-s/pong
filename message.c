@@ -12,19 +12,20 @@
 /** Construct a message then send a message with ball information. */
 void send_ball_msg(void)
 {
+	// construct message
 	uint8_t ball_msg = encrypt_ball(bitmap[0]);
 	uint8_t message = direction + ball_msg;
-	ir_uart_putc(message);  // send message
-	delete_col_0 = true;    // because ball has left screen
-	ball_shot = false;
+	ir_uart_putc(message);		// send message
+	delete_col_0 = true;		// because ball has left screen
+	//ball_shot = false;
 	bounce = false;
 }
 
 /** Send signal to opponent. */
 void send_signal(void)
 {
-	ir_uart_putc('S'); // send signal
-	communicated = SENT_SIGNAL;       // sent signal
+	ir_uart_putc('S');				// send signal
+	communicated = SENT_SIGNAL;		// sent signal
 }
 
 /** Ready to receive a signal from opponent. */
@@ -34,9 +35,9 @@ void receive_opp_signal(void)
 	// if receive 'S' from opp, add ball to bat
 	if (rec_char == 'S') 
 	{
-		communicated = GOT_SIGNAL;	// made contact with opp
+		communicated = GOT_SIGNAL;
 		bitmap[3] = 0b0001000;		// give ball
-		ir_uart_putc('B');		// tell opp you got ball
+		ir_uart_putc('B');			// tell opp you got ball
 	}
 
 	// if receive 'B' from opp, opponent has ball
@@ -53,11 +54,9 @@ void receive_game_msg(void)
 {
 	// should receive a message
 	uint8_t rec_msg = ir_uart_getc();
-	// so decrypt ball, get last three bits
-	rec_ball = rec_msg & 0b111;
-
-	// get direction of ball
-	uint8_t rec_direct = rec_msg & 0x18;
+	rec_ball = rec_msg & 0b111;	// decrypt ball, get last three bits
+	uint8_t rec_direct = rec_msg & 0x18;	// get direction of ball
+	
 	if (rec_direct == FLY_RIGHT) 
 	{
 		// receive ball flying left

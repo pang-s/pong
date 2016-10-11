@@ -1,24 +1,10 @@
-/** @file   message.h
+/** @file   bitter.h
     @author Pang Suwanaposee and Alex Lie
     @date   7 Oct 2016
+    @brief Implements helper functions to manipulate bits.
 */
-
 #ifndef BITTER_H
 #define BITTER_H
-
-
-
-#include <avr/io.h>
-#include "system.h"
-#include "button.h"
-#include "task.h"
-#include "navswitch.h"
-#include "pio.h"
-#include "pacer.h"
-#include "led.h"
-#include "ir_uart.h"
-#include "var.h"
-#include "bitter.h"
 
 /** Given bits n, return the reversed version of the bits. */
 uint8_t reverse(uint8_t n);

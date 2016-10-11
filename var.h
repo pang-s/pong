@@ -1,6 +1,7 @@
 /** @file   var.h
     @author Pang Suwanaposee and Alex Lie
     @date   7 Oct 2016
+    @brief Store variables commonly used in the game.
 */
 
 #ifndef VAR_H
@@ -48,7 +49,7 @@ int communicated;
 bool opp_start;
 bool bounce;
 bool delete_col_0;
-
+bool start_shot;
 
 /** Define PIO pins driving LED matrix rows. */
 const pio_t rows[7];

@@ -16,7 +16,7 @@ all: game.out
 
 
 # Compile: create object files from C source files.
-game.o: game.c ../../drivers/avr/system.h ../../drivers/button.h ../../drivers/display.h ../../fonts/font3x5_1_r.h ../../utils/font.h ../../utils/pacer.h ../../utils/tinygl.h ../../utils/task.h ../../drivers/navswitch.h ../../drivers/led.h ../../drivers/avr/ir_uart.h message.h var.h bitter.h
+game.o: game.c ../../drivers/avr/system.h ../../drivers/button.h ../../drivers/display.h ../../fonts/font3x5_1_r.h ../../utils/font.h ../../utils/pacer.h ../../utils/tinygl.h ../../utils/task.h ../../drivers/navswitch.h ../../drivers/led.h ../../drivers/avr/ir_uart.h message.h var.h bitter.h joystick.h getball.h hitball.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 pio.o: ../../drivers/avr/pio.c ../../drivers/avr/pio.h ../../drivers/avr/system.h
@@ -76,8 +76,18 @@ var.o: var.c var.h
 bitter.o: bitter.c bitter.h
 	$(CC) -c $(CFLAGS) $< -o $@
 	
+joystick.o: joystick.c joystick.h
+	$(CC) -c $(CFLAGS) $< -o $@
+	
+getball.o: getball.c getball.h
+	$(CC) -c $(CFLAGS) $< -o $@
+	
+hitball.o: hitball.c hitball.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+	
 # Link: create ELF output file from object files.
-game.out: game.o pio.o system.o timer.o button.o display.o ledmat.o font.o pacer.o tinygl.o task.o navswitch.o led.o ir_uart.o usart1.o timer0.o prescale.o message.o var.o bitter.o
+game.out: game.o pio.o system.o timer.o button.o display.o ledmat.o font.o pacer.o tinygl.o task.o navswitch.o led.o ir_uart.o usart1.o timer0.o prescale.o message.o var.o bitter.o joystick.o getball.o hitball.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 	$(SIZE) $@
 
