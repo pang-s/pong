@@ -84,7 +84,7 @@ void check_button_restart(void)
 		if(win)
 		{
 			//start with the ball
-			bitmap[3] = 0b0001000;		// give ball
+			bitmap[3] = 0b0001000;
 			opp_start = false;
 		}
 		else

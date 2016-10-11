@@ -14,6 +14,10 @@
 #define FLY_RIGHT 0b10000
 #define WINNER_TEXT "WINNER :)"
 #define LOSER_TEXT "LOSER :("
+#define SIGNAL1 'S'
+#define SIGNAL_BALL 'B'
+#define SIGNAL_WIN 'W'
+
 
 // used in board
 uint8_t current_column;

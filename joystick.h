@@ -16,6 +16,9 @@ void check_button_right(void);
 /** Check button has been pushed to shoot ball. */
 void check_button_push(void);
 
+/** Reset variables to reset game. */
+void reset_game(void);
+
 /** Check button has been pushed to restart game. */
 void check_button_restart(void);
 

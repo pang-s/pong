@@ -21,33 +21,33 @@ void send_ball_msg(void)
 	bounce = false;
 }
 
-/** Send signal to opponent. */
+/** Send initial signal to opponent. */
 void send_signal(void)
 {
-	ir_uart_putc('S');				// send signal
+	ir_uart_putc(SIGNAL1);
 	communicated = SENT_SIGNAL;		
 }
 
 /** Tell opponent they won */
 void give_medal(void)
 {
-	ir_uart_putc('W');
+	ir_uart_putc(SIGNAL_WIN);
 }
 
 /** Ready to receive a signal from opponent. */
 void receive_opp_signal(void)
 {
 	uint8_t rec_char = ir_uart_getc();
-	// if receive 'S' from opp, add ball to bat
-	if (rec_char == 'S') 
+	// if receive initial signal from opp, add ball to bat
+	if (rec_char == SIGNAL1) 
 	{
 		communicated = GOT_SIGNAL;
 		bitmap[3] = 0b0001000;		// give ball
-		ir_uart_putc('B');			// tell opp you got ball
+		ir_uart_putc(SIGNAL_BALL);			// tell opp you got ball
 	}
 
-	// if receive 'B' from opp, opponent has ball
-	if (rec_char == 'B') 
+	// if receive a ball signal from opp means opponent has ball
+	if (rec_char == SIGNAL_BALL) 
 	{
 		// opponent will start with ball
 		opp_start = true;
@@ -62,7 +62,7 @@ void receive_game_msg(void)
 	uint8_t rec_msg = ir_uart_getc();
 	
 	// check if winning message is received first
-	if(rec_msg == 'W' && game_on)
+	if(rec_msg == SIGNAL_WIN && game_on)
 	{
 		win = true;
 		game_on = false;
@@ -119,6 +119,7 @@ void ready_to_receive(void)
 	// check if there is something to receive
 	if (ir_uart_read_ready_p()) 
 	{
+		// if game restarted, do not send opponent a signal
 		if (communicated == SENT_SIGNAL && restarted == false) 
 		{
 			receive_opp_signal();

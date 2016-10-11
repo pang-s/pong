@@ -1,37 +1,31 @@
 /** @file   game.c
     @author Pang Suwanaposee and Alex Lie
     @date   7 Oct 2016
+    @brief A ping-pong style game.
 */
 
-#include <avr/io.h>
+
 #include "system.h"
 #include "button.h"
 #include "task.h"
 #include "navswitch.h"
 #include "pio.h"
-#include "pacer.h"
-#include "led.h"
-#include "ir_uart.h"
 #include "var.h"
 #include "message.h"
 #include "bitter.h"
 #include "joystick.h"
 #include "getball.h"
 #include "hitball.h"
-
 #include "tinygl.h"
 #include "../fonts/font3x5_1.h"
 
-/* Define polling rate in Hz.  */
+/* Define polling rates in Hz.  */
 #define LOOP_RATE 300
+#define DISPLAY_TASK_RATE 250
+#define BUTTON_TASK_RATE 7
 
 /* Define text update rate (characters per 10 s).  */
 #define MESSAGE_RATE 10
-
-
-#define LED_PIO PIO_DEFINE (PORT_C, 2)
-#define DISPLAY_TASK_RATE 250
-#define BUTTON_TASK_RATE 7
 
 
 /** Initially set all PIO rows and cols to high. */
@@ -50,6 +44,17 @@ static void pio_init(void)
     pio_config_set(LEDMAT_COL3_PIO, PIO_OUTPUT_HIGH);
     pio_config_set(LEDMAT_COL4_PIO, PIO_OUTPUT_HIGH);
     pio_config_set(LEDMAT_COL5_PIO, PIO_OUTPUT_HIGH);
+}
+
+/** Tinygl initilisation. */
+void tiny_init(void)
+{
+	tinygl_init (LOOP_RATE);
+    tinygl_font_set (&font3x5_1);
+    tinygl_text_speed_set (MESSAGE_RATE);
+    tinygl_text_mode_set (TINYGL_TEXT_MODE_SCROLL);
+    tinygl_text_dir_set (TINYGL_TEXT_DIR_ROTATE);
+    tinygl_text (WINNER_TEXT);
 }
 
 /** Given the row pattern and current column, display column. */
@@ -131,17 +136,6 @@ static void button_task(__unused__ void *data)
 		check_conditions();
     }
 
-}
-
-/** Tinygl initilisation. */
-void tiny_init(void)
-{
-	tinygl_init (LOOP_RATE);
-    tinygl_font_set (&font3x5_1);
-    tinygl_text_speed_set (MESSAGE_RATE);
-    tinygl_text_mode_set (TINYGL_TEXT_MODE_SCROLL);
-    tinygl_text_dir_set (TINYGL_TEXT_DIR_ROTATE);
-    tinygl_text (WINNER_TEXT);
 }
 
 /** Main function of program. */
