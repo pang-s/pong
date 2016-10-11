@@ -14,6 +14,7 @@
 #include "ir_uart.h"
 #include "var.h"
 #include "message.h"
+#include "bitter.h"
 
 
 #define LED_PIO PIO_DEFINE (PORT_C, 2)
@@ -107,31 +108,31 @@ static void ini(void)
     pio_config_set(LEDMAT_COL5_PIO, PIO_OUTPUT_HIGH);
 }
 
-/** Given bits n, return the reversed version of the bits. */
-uint8_t reverse(uint8_t n)
-{
-    return (lookup[n & 0b1111] << 3) | lookup[n >> 3];
-}
+//~ /** Given bits n, return the reversed version of the bits. */
+//~ uint8_t reverse(uint8_t n)
+//~ {
+    //~ return (lookup[n & 0b1111] << 3) | lookup[n >> 3];
+//~ }
 
-/** Encrypt ball bitmap into condensed form 
- * eg. takes 1000000 and turns into 110 */
-uint8_t encrypt_ball(uint8_t bits)
-{
-    return log(bits) / log(2);
-}
+//~ /** Encrypt ball bitmap into condensed form 
+ //~ * eg. takes 1000000 and turns into 110 */
+//~ uint8_t encrypt_ball(uint8_t bits)
+//~ {
+    //~ return log(bits) / log(2);
+//~ }
 
-/** Decrypt ball bitmap into true form
- * eg takes 110 turns into 1000000 */
-uint8_t decrypt_ball(uint8_t bits)
-{
-    int i;
-    int val = 1;
-    for (i = 0; i < bits; i++) 
-    {
-        val = val * 2;
-    }
-    return val;
-}
+//~ /** Decrypt ball bitmap into true form
+ //~ * eg takes 110 turns into 1000000 */
+//~ uint8_t decrypt_ball(uint8_t bits)
+//~ {
+    //~ int i;
+    //~ int val = 1;
+    //~ for (i = 0; i < bits; i++) 
+    //~ {
+        //~ val = val * 2;
+    //~ }
+    //~ return val;
+//~ }
 
 /** Given the row pattern and current column, display column. */
 void display_column(uint8_t row_pattern, uint8_t current_column)
@@ -167,58 +168,58 @@ void display_column(uint8_t row_pattern, uint8_t current_column)
 //~ }
 
 /** Ready to receive a signal from opponent. */
-void receive_opp_signal(void)
-{
-	uint8_t rec_char = ir_uart_getc();
-	// if receive 'S' from opp, add ball to bat
-	if (rec_char == 'S') 
-	{
-		communicated = GOT_SIGNAL;	// made contact with opp
-		bitmap[3] = 0b0001000;		// give ball
-		ir_uart_putc('B');		// tell opp you got ball
-	}
+//~ void receive_opp_signal(void)
+//~ {
+	//~ uint8_t rec_char = ir_uart_getc();
+	//~ // if receive 'S' from opp, add ball to bat
+	//~ if (rec_char == 'S') 
+	//~ {
+		//~ communicated = GOT_SIGNAL;	// made contact with opp
+		//~ bitmap[3] = 0b0001000;		// give ball
+		//~ ir_uart_putc('B');		// tell opp you got ball
+	//~ }
 
-	// if receive 'B' from opp, opponent has ball
-	if (rec_char == 'B') 
-	{
-		// opponent will start with ball
-		opp_start = true;
-		communicated = GOT_SIGNAL;
-	}
-}
+	//~ // if receive 'B' from opp, opponent has ball
+	//~ if (rec_char == 'B') 
+	//~ {
+		//~ // opponent will start with ball
+		//~ opp_start = true;
+		//~ communicated = GOT_SIGNAL;
+	//~ }
+//~ }
 
-/** Ready to receive a game message from opponent. */
-void receive_game_msg(void)
-{
-	// should receive a message
-	uint8_t rec_msg = ir_uart_getc();
-	// so decrypt ball, get last three bits
-	rec_ball = rec_msg & 0b111;
+//~ /** Ready to receive a game message from opponent. */
+//~ void receive_game_msg(void)
+//~ {
+	//~ // should receive a message
+	//~ uint8_t rec_msg = ir_uart_getc();
+	//~ // so decrypt ball, get last three bits
+	//~ rec_ball = rec_msg & 0b111;
 
-	// get direction of ball
-	uint8_t rec_direct = rec_msg & 0x18;
-	if (rec_direct == 0b10000) 
-	{
-		// receive ball flying left
-		received = true;
-		receiving_left = true;
+	//~ // get direction of ball
+	//~ uint8_t rec_direct = rec_msg & 0x18;
+	//~ if (rec_direct == 0b10000) 
+	//~ {
+		//~ // receive ball flying left
+		//~ received = true;
+		//~ receiving_left = true;
 
-	} 
-	else if (rec_direct == 0b1000) 
-	{
-		// receive ball flying right
-		received = true;
-		receiving_right = true;
-	}
+	//~ } 
+	//~ else if (rec_direct == 0b1000) 
+	//~ {
+		//~ // receive ball flying right
+		//~ received = true;
+		//~ receiving_right = true;
+	//~ }
 
-	// check that the receieved ball shows one dot
-	if (rec_ball >= 0 && rec_ball <= 6) 
-	{
-		// show received ball on screen
-		bitmap[0] = reverse(decrypt_ball(rec_ball));
-		received = true;
-	}
-}
+	//~ // check that the receieved ball shows one dot
+	//~ if (rec_ball >= 0 && rec_ball <= 6) 
+	//~ {
+		//~ // show received ball on screen
+		//~ bitmap[0] = reverse(decrypt_ball(rec_ball));
+		//~ received = true;
+	//~ }
+//~ }
 
 
 /** Board to be updated. */
@@ -332,7 +333,7 @@ void ball_bounce_left(void)
 	bounce_left = true;
 	bounce = true;
 	reflect_right = false;
-	direction = 0b10000;       // fly to the right
+	direction = FLY_RIGHT;       // fly to the right
 }
 
 /** Bounce ball to the middle. */
@@ -355,7 +356,7 @@ void ball_bounce_right(void)
 	bounce_right = true;
 	bounce = true;
 	reflect_left = false;
-	direction = 0b1000;        // fly to the left
+	direction = FLY_LEFT;        // fly to the left
 }
 
 /** Check actions after receiving ball. */
@@ -423,7 +424,7 @@ void bounce_back_left(void)
 		// ball reflected, update ball to show in next column
 		bitmap[bounce_left_to] = bitmap[bounce_left_from] / 2;
 		reflect_right = true;
-		direction = 0b10000;   // fly to the right
+		direction = FLY_RIGHT;   // fly to the right
 	}
 	bitmap[bounce_left_from] = 0x00; // clear ball from prev col
 	bounce_left_from--;
@@ -444,7 +445,7 @@ void bounce_back_right(void)
 		// ball reflected, update ball to show in next column
 		bitmap[bounce_right_to] = bitmap[bounce_right_from] * 2;
 		reflect_left = true;
-		direction = 0b1000;    // fly to the left
+		direction = FLY_LEFT;    // fly to the left
 	}
 	bitmap[bounce_right_from] = 0x00; // clear ball from prev col
 	bounce_right_from--;

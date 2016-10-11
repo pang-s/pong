@@ -9,6 +9,8 @@
 #define NO_CONTACT 0
 #define SENT_SIGNAL 1
 #define GOT_SIGNAL 2
+#define FLY_LEFT 0b1000
+#define FLY_RIGHT 0b10000
 
 // used in board
 uint8_t current_column;

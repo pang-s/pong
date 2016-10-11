@@ -6,19 +6,9 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-//~ #include "system.h"
-//~ #include "ir_uart.h"
 
 #include "system.h"
-#include "button.h"
-#include "task.h"
-#include "navswitch.h"
 #include "pio.h"
-#include "pacer.h"
-#include "led.h"
-#include "ir_uart.h"
-#include "message.h"
-#include "var.h"
 
 
 /** Construct a message then send a message with ball information. */
@@ -26,5 +16,11 @@ void send_ball_msg(void);
 
 /** Send signal to opponent. */
 void send_signal(void);
+
+/** Ready to receive a signal from opponent. */
+void receive_opp_signal(void);
+
+/** Ready to receive a game message from opponent. */
+void receive_game_msg(void);
 
 #endif
