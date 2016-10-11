@@ -12,6 +12,8 @@
 #define GOT_SIGNAL 2
 #define FLY_LEFT 0b1000
 #define FLY_RIGHT 0b10000
+#define WINNER_TEXT "WINNER :)"
+#define LOSER_TEXT "LOSER :("
 
 // used in board
 uint8_t current_column;

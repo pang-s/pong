@@ -51,14 +51,36 @@ void check_button_push(void)
 	}
 }
 
+/** Reset variables to reset game. */
+void reset_game(void)
+{
+	// reset text so that it won't always say you lose
+	tinygl_text (WINNER_TEXT); 
+	// reset variables so ball is updated properly
+	prev_shot_row = 3;
+	new_shot_row = 2;
+	prev_column = 0;
+	direction = 0;
+	// reset game status
+	ball_shot = false;
+	delete_col_0 = false;
+	lose = false;
+	win = false;
+	game_on = true;
+	restarted = true;
+	// reset screen with bat in middle
+	bitmap[0] = 0x00;
+	bitmap[1] = 0x00;
+	bitmap[2] = 0x00;
+	bitmap[4] = 0b0011100; 
+}
+
 /** Check button has been pushed to restart game. */
 void check_button_restart(void)
 {
 	// Check game finished.
 	if ((win || lose) && button_push_event_p (BUTTON1)) 
 	{
-		//tinygl_clear();
-
 		if(win)
 		{
 			//start with the ball
@@ -69,50 +91,8 @@ void check_button_restart(void)
 		{	
 			opp_start = true;
 		}
-		tinygl_text ("YOU WON :)");
-// used in button
-prev_shot_row = 3;
-new_shot_row = 2;
-//~ flybit;
-flyout = false;
-//~ bounce_straight_to;
-//~ bounce_straight_from;
-//~ bounce_left_to;
-//~ bounce_left_from;
-//~ bounce_right_to;
-//~ bounce_right_from;
-receive_go_to = 1;
-receive_prev = 0;
-reflect_right = false;
-reflect_left = false;
-bounce_straight = false;
-bounce_left = false;
-bounce_right = false;
-receiving_left = false;
-receiving_right = false;
-
-
-// used in both
-prev_column = 0;
-direction = 0;
-ball_shot = false;
-received = false;
-communicated = 2;
-//opp_start = false;
-bounce = false;
-delete_col_0 = false;
-start_shot = false;
-
-lose = false;
-win = false;
-game_on = true;
-restarted = true;
-bitmap[0] = 0x00;
-bitmap[1] = 0x00;
-bitmap[2] = 0x00;
-//bitmap[3] = 0x00;
-bitmap[4] = 0b0011100; 
-
+		reset_game();
+		
 	}
 }
 

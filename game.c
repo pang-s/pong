@@ -141,7 +141,7 @@ void tiny_init(void)
     tinygl_text_speed_set (MESSAGE_RATE);
     tinygl_text_mode_set (TINYGL_TEXT_MODE_SCROLL);
     tinygl_text_dir_set (TINYGL_TEXT_DIR_ROTATE);
-    tinygl_text ("YOU WON :)");
+    tinygl_text (WINNER_TEXT);
 }
 
 /** Main function of program. */

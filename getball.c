@@ -20,7 +20,7 @@ void check_flyout(void)
 		bitmap[4] = flybit;
 		flyout = false;
 		lose = true;
-		tinygl_text ("YOU LOST :(");
+		tinygl_text (LOSER_TEXT);
 		give_medal();
 	}
 }
