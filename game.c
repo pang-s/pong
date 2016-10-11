@@ -121,7 +121,7 @@ static void button_task(__unused__ void *data)
     navswitch_update();
 
     // if havent made contact with opp
-    if (communicated == NO_CONTACT) 
+    if (communicated == NO_CONTACT && restarted == false) 
     {
 		send_signal(); // send signal to opp
     }

@@ -119,7 +119,7 @@ void ready_to_receive(void)
 	// check if there is something to receive
 	if (ir_uart_read_ready_p()) 
 	{
-		if (communicated == SENT_SIGNAL) 
+		if (communicated == SENT_SIGNAL && restarted == false) 
 		{
 			receive_opp_signal();
 		} 

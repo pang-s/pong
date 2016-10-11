@@ -56,6 +56,7 @@ bool start_shot = false;
 bool lose = false;
 bool win = false;
 bool game_on = true;
+bool restarted = false;
 
 /** Define PIO pins driving LED matrix rows. */
 const pio_t rows[] = 
