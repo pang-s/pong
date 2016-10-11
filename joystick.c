@@ -105,7 +105,7 @@ void check_control(void)
 	check_button_restart();
 }
 
-/** If ball shot, show ball path across screen. */
+/** Player shot ball so show ball path across screen. */
 void ball_shot_path(void)
 {
 	// check if ball shot and ball is not at column less than 0

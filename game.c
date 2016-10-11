@@ -9,6 +9,7 @@
 #include "button.h"
 #include "task.h"
 #include "navswitch.h"
+#include "ir_uart.h"
 #include "pio.h"
 #include "var.h"
 #include "message.h"

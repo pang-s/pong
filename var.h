@@ -7,56 +7,65 @@
 #ifndef VAR_H
 #define VAR_H
 
+/* Define states of communication. */
 #define NO_CONTACT 0
 #define SENT_SIGNAL 1
 #define GOT_SIGNAL 2
+
+/* Define the direction of ball (integrated in a message). */
 #define FLY_LEFT 0b1000
 #define FLY_RIGHT 0b10000
+
+/* Define text that will scroll across screen. */
 #define WINNER_TEXT "WINNER :)"
 #define LOSER_TEXT "LOSER :("
+
+/* Define signals that can be sent/received. */
 #define SIGNAL1 'S'
 #define SIGNAL_BALL 'B'
 #define SIGNAL_WIN 'W'
 
-
-// used in board
+// variables used when updating the game board
 uint8_t current_column;
 uint8_t rec_ball;
 
-
-// used in button
+// variables used to keep track of the ball
+uint8_t direction;
+int prev_column;
 int prev_shot_row;
 int new_shot_row;
+int receive_go_to;
+int receive_prev;
 uint8_t flybit;
 bool flyout;
+
+// declaring variables to know where the ball should bounce
 int bounce_straight_to;
 int bounce_straight_from;
 int bounce_left_to;
 int bounce_left_from;
 int bounce_right_to;
 int bounce_right_from;
-int receive_go_to;
-int receive_prev;
-bool reflect_right;
-bool reflect_left;
+
+// variables to know if the ball should bounce to a certain direction
 bool bounce_straight;
 bool bounce_left;
 bool bounce_right;
+
+// variables to know if the ball should reflect to a certain direction
+bool reflect_right;
+bool reflect_left;
 bool receiving_left;
 bool receiving_right;
 
-
-// used in both
-int prev_column;
-uint8_t direction;
+// initial game statuses
+int communicated;
 bool ball_shot;
 bool received;
-int communicated;
 bool opp_start;
 bool bounce;
 bool delete_col_0;
 bool start_shot;
-
 bool lose;
 bool win;
 bool game_on;

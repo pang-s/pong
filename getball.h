@@ -10,13 +10,13 @@
 /** Check if ball needs to be shown flying out of screen. */
 void check_flyout(void);
 
-/** Bounce ball to the left. */
+/** Bounce ball to the left as it hits right of bat. */
 void ball_bounce_left(void);
 
 /** Bounce ball to the middle. */
 void ball_bounce_middle(void);
 
-/** Bounce ball to the right. */
+/** Bounce ball to the right as it hits left of bat. */
 void ball_bounce_right(void);
 
 /** Check actions after receiving ball. */

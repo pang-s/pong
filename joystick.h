@@ -25,7 +25,7 @@ void check_button_restart(void);
 /** Check player controls. */
 void check_control(void);
 
-/** If ball shot, show ball path across screen. */
+/** Player shot ball so show ball path across screen. */
 void ball_shot_path(void);
 
 #endif

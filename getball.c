@@ -25,10 +25,9 @@ void check_flyout(void)
 	}
 }
 
-/** Bounce ball to the left. */
+/** Bounce ball to the left as it hits right of bat. */
 void ball_bounce_left(void)
 {
-	// hits right of bat so bounce to the left
 	bounce_left_from = 3;
 	bounce_left_to = 2;
 	bounce_left = true;
@@ -39,8 +38,7 @@ void ball_bounce_left(void)
 
 /** Bounce ball to the middle. */
 void ball_bounce_middle(void)
-{
-	// hits middle go middle                                
+{                               
 	bounce_straight_from = 3;
 	bounce_straight_to = 2;
 	bounce_straight = true;
@@ -48,10 +46,9 @@ void ball_bounce_middle(void)
 	direction = 0;
 }
 
-/** Bounce ball to the right. */
+/** Bounce ball to the right as it hits left of bat. */
 void ball_bounce_right(void)
 {
-	// hits left of bat so bounce to the right
 	bounce_right_from = 3;
 	bounce_right_to = 2;
 	bounce_right = true;
@@ -71,7 +68,8 @@ void receive_ball(void)
 		bitmap[4] = bitmap[4] | bitmap[3];
 		bitmap[3] = 0x00;
 		flyout = true;
-	} else 
+	} 
+	else 
 	{
 		// get ball ready to bounce back
 		// check where ball hits bat

@@ -16,7 +16,7 @@ all: game.out
 
 
 # Compile: create object files from C source files.
-game.o: game.c ../../drivers/avr/system.h ../../drivers/button.h ../../fonts/font3x5_1_r.h ../../utils/font.h ../../utils/tinygl.h ../../utils/task.h ../../drivers/navswitch.h ../../drivers/avr/ir_uart.h message.h var.h bitter.h joystick.h getball.h hitball.h
+game.o: game.c ../../drivers/avr/system.h ../../drivers/button.h ../../drivers/display.h ../../fonts/font3x5_1_r.h ../../utils/font.h ../../utils/tinygl.h ../../utils/task.h ../../drivers/navswitch.h ../../drivers/avr/ir_uart.h message.h var.h bitter.h joystick.h getball.h hitball.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 pio.o: ../../drivers/avr/pio.c ../../drivers/avr/pio.h ../../drivers/avr/system.h
@@ -25,7 +25,16 @@ pio.o: ../../drivers/avr/pio.c ../../drivers/avr/pio.h ../../drivers/avr/system.
 system.o: ../../drivers/avr/system.c ../../drivers/avr/system.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
+timer.o: ../../drivers/avr/timer.c ../../drivers/avr/system.h ../../drivers/avr/timer.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
 button.o: ../../drivers/button.c ../../drivers/avr/pio.h ../../drivers/avr/system.h ../../drivers/button.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+display.o: ../../drivers/display.c ../../drivers/avr/system.h ../../drivers/display.h ../../drivers/ledmat.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+ledmat.o: ../../drivers/ledmat.c ../../drivers/avr/pio.h ../../drivers/avr/system.h ../../drivers/ledmat.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 font.o: ../../utils/font.c ../../drivers/avr/system.h ../../utils/font.h
@@ -72,7 +81,7 @@ hitball.o: hitball.c hitball.h
 
 	
 # Link: create ELF output file from object files.
-game.out: game.o pio.o system.o button.o font.o tinygl.o task.o navswitch.o ir_uart.o usart1.o timer0.o prescale.o message.o var.o bitter.o joystick.o getball.o hitball.o
+game.out: game.o pio.o system.o timer.o button.o display.o ledmat.o font.o tinygl.o task.o navswitch.o ir_uart.o usart1.o timer0.o prescale.o message.o var.o bitter.o joystick.o getball.o hitball.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 	$(SIZE) $@
 

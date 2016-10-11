@@ -6,6 +6,9 @@
 #ifndef BITTER_H
 #define BITTER_H
 
+/** Lookup table needed for reversing bits. */
+unsigned char lookup[16];
+
 /** Given bits n, return the reversed version of the bits. */
 uint8_t reverse(uint8_t n);
 
