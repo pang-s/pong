@@ -1,7 +1,7 @@
 /** @file   game.c
     @author Pang Suwanaposee psu43 and Alex Lie lli134
     @date   7 Oct 2016
-    @brief A ping-pong style game.
+    @brief A pong style game.
 */
 
 
