@@ -1,5 +1,5 @@
 /** @file   getball.h
-    @author Pang Suwanaposee and Alex Lie
+    @author Pang Suwanaposee psu43 and Alex Lie lli134
     @date   7 Oct 2016
     @brief Function to receive the ball onto the bat or fly out.
 */

@@ -1,5 +1,5 @@
 /** @file   var.c
-    @author Pang Suwanaposee and Alex Lie
+    @author Pang Suwanaposee psu43 and Alex Lie lli134
     @date   7 Oct 2016
     @brief Store variables commonly used in the game.
 */
