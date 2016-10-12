@@ -1,5 +1,5 @@
 /** @file   hitball.c
-    @author Pang Suwanaposee psu43 and Alex Lie lli134
+    @author Pang Suwanaposee psu43 33330630 and Alex Lie lli134 66969353
     @date   7 Oct 2016
     @brief Functions to hit/bounce the ball back if it hits the bat.
 */

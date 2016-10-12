@@ -1,5 +1,5 @@
 # File:   Makefile
-# Author: Pang Suwanaposee psu43 and Alex Lie lli134
+# Author: Pang Suwanaposee psu43 33330630 and Alex Lie lli134 66969353
 # Date:   7 Oct 2016
 # Descr:  Makefile for game
 

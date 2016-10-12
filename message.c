@@ -1,5 +1,5 @@
 /** @file   message.c
-    @author Pang Suwanaposee psu43 and Alex Lie lli134
+    @author Pang Suwanaposee psu43 33330630 and Alex Lie lli134 66969353
     @date   7 Oct 2016
     @brief This implements functions to do with sending and receiving
     messages.
