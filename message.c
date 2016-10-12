@@ -9,6 +9,7 @@
 #include "message.h"
 #include "var.h"
 #include "tinygl.h"
+#include "bitter.h"
 
 /** Construct a message then send a message with ball information. */
 void send_ball_msg(void)
@@ -87,7 +88,7 @@ void receive_game_msg(void)
 		}
 
 		// check that the receieved ball shows one dot
-		if (rec_ball >= 0 && rec_ball <= 6) 
+		if (rec_ball < 7) 
 		{
 			// show received ball on screen
 			bitmap[0] = reverse(decrypt_ball(rec_ball));

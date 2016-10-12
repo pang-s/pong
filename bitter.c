@@ -7,6 +7,7 @@
 #include "pio.h"
 #include "var.h"
 #include "bitter.h"
+#include <math.h>
 
 /** Lookup table needed for reversing bits. */
 unsigned char lookup[16] = 

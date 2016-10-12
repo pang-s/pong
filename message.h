@@ -17,6 +17,9 @@ void send_ball_msg(void);
 /** Send signal to opponent. */
 void send_signal(void);
 
+/** Tell opponent they won */
+void give_medal(void);
+
 /** Ready to receive a signal from opponent. */
 void receive_opp_signal(void);
 
