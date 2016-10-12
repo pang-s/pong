@@ -72,7 +72,7 @@ void reset_game(void)
 	bitmap[0] = 0x00;
 	bitmap[1] = 0x00;
 	bitmap[2] = 0x00;
-	bitmap[4] = 0b0011100; 
+	bitmap[4] = 0b0011100; // this is the bat at the middle
 }
 
 /** Check button has been pushed to restart game. */
@@ -84,7 +84,7 @@ void check_button_restart(void)
 		if(win)
 		{
 			//start with the ball
-			bitmap[3] = 0b0001000;
+			bitmap[3] = 0b0001000; // place ball at middle
 			opp_start = false;
 		}
 		else

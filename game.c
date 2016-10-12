@@ -1,5 +1,5 @@
 /** @file   game.c
-    @author Pang Suwanaposee and Alex Lie
+    @author Pang Suwanaposee psu43 and Alex Lie
     @date   7 Oct 2016
     @brief A ping-pong style game.
 */
